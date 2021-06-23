@@ -103,9 +103,21 @@ class PmbDevices(QObject):
         return ret
 
 
+def configure_sudo_askpass_program(args):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Launch our own GUI askpass handler by default
+    askpass_program = f"{script_dir}/askpass.py"
+    if "SSH_ASKPASS" in os.environ:
+        askpass_program = os.environ["SSH_ASKPASS"]
+        logging.debug(f"autodetected SSH_ASKPASS program: {askpass_program}")
+    _args.sudo_askpass_program = askpass_program
+
+
 def start(args):
     global _args
     _args = args
+
+    configure_sudo_askpass_program(args)
 
     # We will need this, directory which contains this script
     script_dir = os.path.dirname(os.path.abspath(__file__))
