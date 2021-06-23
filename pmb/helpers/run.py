@@ -72,7 +72,19 @@ def root(args, cmd, working_dir=None, output="log", output_return=False,
     """
     if env:
         cmd = ["sh", "-c", flat_cmd(cmd, env=env)]
-    cmd = [pmb.config.sudo] + cmd
+
+    # fom `man sudo`:
+    # If the -A (askpass) option
+    #  is specified, a (possibly graphical) helper program is executed to
+    #  read the user's password and output the password to the standard output.
+    #  If the SUDO_ASKPASS environment variable is set, it specifies the path
+    #  to the helper program.
+    if "sudo_askpass_program" in args:
+        # sudo is required here, unfortunately, so it's hardcoded
+        cmd = ["env", f"SUDO_ASKPASS={args.sudo_askpass_program}",
+               "sudo", "--askpass"] + cmd
+    else:
+        cmd = [pmb.config.sudo] + cmd
 
     return user(args, cmd, working_dir, output, output_return, check, env,
                 True)
