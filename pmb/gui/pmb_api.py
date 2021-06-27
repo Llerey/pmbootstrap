@@ -16,6 +16,7 @@ import pmb.config.pmaports
 import pmb.helpers.devices
 import pmb.helpers.git
 import pmb.helpers.ui
+import pmb.parse._apkbuild
 
 
 class DeviceInfo:
@@ -123,6 +124,16 @@ def list_vendors(args) -> Set[str]:
 def list_vendor_codenames(args, vendor: str,
                           unmaintained: Optional[bool] = None) -> List[str]:
     return pmb.helpers.devices.list_codenames(args, vendor, unmaintained)
+
+
+def list_device_kernels(args, codename: str) -> dict:
+    """
+    Get device kernel subpackages
+    :param args: global program state
+    :param codename: device codename (for example qemu-amd64)
+    :return: dict('kernel_subpkgname' => 'description', ...)
+    """
+    return pmb.parse._apkbuild.kernels(args, codename)
 
 
 def list_deviceinfos(args) -> List[DeviceInfo]:

@@ -29,6 +29,7 @@ class PmbDevices(QObject):
     channels_changed = pyqtSignal()
     current_channel_changed = pyqtSignal()
     devices_changed = pyqtSignal()
+    device_kernels_changed = pyqtSignal()
     uis_changed = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -43,6 +44,8 @@ class PmbDevices(QObject):
             self._selected_vendor = 0
         self._avail_codenames = []
         self._selected_codename = None
+        self._avail_kernels = None
+        self._sel_kernel = None
 
     @pyqtProperty(list, notify=vendors_changed)
     def vendors(self) -> list[str]:
@@ -70,6 +73,8 @@ class PmbDevices(QObject):
         self.devices_changed.emit()
         self._selected_codename = 0
         self.uis_changed.emit()
+        self._avail_kernels = None
+        self.device_kernels_changed.emit()
 
     @pyqtProperty(list, notify=devices_changed)
     def vendor_devices(self) -> list[str]:
@@ -85,11 +90,31 @@ class PmbDevices(QObject):
         self.devices_changed.emit()
         self._selected_codename = None
         self.uis_changed.emit()
+        self._avail_kernels = None
+        self.device_kernels_changed.emit()
 
     @pyqtSlot(int)
     def select_device(self, idx: int) -> None:
         self._selected_codename = self._avail_codenames[idx]
         self.uis_changed.emit()
+        self._avail_kernels = None
+        self.device_kernels_changed.emit()
+
+    @pyqtProperty(list, notify=device_kernels_changed)
+    def device_kernels(self) -> list[str]:
+        ret = []
+        if self._selected_codename:
+            self._avail_kernels = pmb.gui.pmb_api.list_device_kernels(
+                _args, self._selected_codename)
+            self._sel_kernel = 0
+        if self._avail_kernels:
+            for kernel in self._avail_kernels.keys():
+                ret.append(f"{kernel}  ({self._avail_kernels[kernel]})")
+        return ret
+
+    @pyqtSlot(int)
+    def select_kernel(self, idx: int) -> None:
+        self._sel_kernel = idx
 
     @pyqtProperty(list, notify=uis_changed)
     def uis_list(self) -> list[str]:

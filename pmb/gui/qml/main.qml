@@ -94,6 +94,22 @@ ApplicationWindow {
             }
 
             Row {
+                height: cbDeviceKernels.height
+                Label {
+                    height: cbDeviceKernels.height
+                    verticalAlignment: Text.AlignVCenter
+                    text: qsTr("Select kernel: ")
+                }
+                ComboBox {
+                    id: cbDeviceKernels
+                    model: pmbDevices.device_kernels
+                    onActivated: {
+                        pmbDevices.select_kernel(index)
+                    }
+                }
+            }
+
+            Row {
                 height: cbUis.height
                 Label {
                     height: cbUis.height
