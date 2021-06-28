@@ -31,6 +31,9 @@ def main():
         # Initialize or require config
         if args.action == "init":
             return config_init.frontend(args)
+        elif args.action == "gui":
+            # "pmbootstrap gui" also does not require initialized config
+            return frontend.gui(args)
         elif not os.path.exists(args.config):
             raise RuntimeError("Please specify a config file, or run"
                                " 'pmbootstrap init' to generate one.")

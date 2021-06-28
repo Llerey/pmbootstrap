@@ -16,6 +16,7 @@ import pmb.chroot.other
 import pmb.config
 import pmb.export
 import pmb.flasher
+import pmb.gui
 import pmb.helpers.devices
 import pmb.helpers.git
 import pmb.helpers.lint
@@ -609,3 +610,7 @@ def lint(args):
 def status(args):
     if not pmb.helpers.status.print_status(args, args.details):
         sys.exit(1)
+
+
+def gui(args):
+    pmb.gui.run_gui(args)
