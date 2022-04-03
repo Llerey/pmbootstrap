@@ -116,6 +116,13 @@ def run_abuild(args, pkgname, arch, apkbuild_path, kbuild_out):
     chroot = args.work + "/chroot_native"
     build_path = "/home/pmos/build"
     kbuild_out_source = "/mnt/linux/.output"
+    umount_cleanup = False
+
+    if not os.path.ismount(chroot + "/mnt/linux"):
+        logging.info("envkernel hasn't run, trying to use current dir as source")
+        pmb.helpers.run.root(args, ["mkdir", "-p", chroot + "/mnt/linux"])
+        pmb.helpers.run.root(args, ["mount", "--bind", ".", chroot + "/mnt/linux"])
+        umount_cleanup = True
 
     if not os.path.exists(chroot + kbuild_out_source):
         raise RuntimeError("No '.output' dir found in your kernel source dir."
@@ -146,6 +153,9 @@ def run_abuild(args, pkgname, arch, apkbuild_path, kbuild_out):
            "SUDO_APK": "abuild-apk --no-progress"}
     cmd = ["abuild", "rootpkg"]
     pmb.chroot.user(args, cmd, working_dir=build_path, env=env)
+
+    if umount_cleanup:
+        pmb.helpers.run.root(args, ["umount", chroot + "/mnt/linux"])
 
     # Clean up symlinks
     if build_output != "":
@@ -183,6 +193,8 @@ def package_kernel(args):
     depends, _ = pmb.build._package.build_depends(
         args, apkbuild, pmb.config.arch_native, strict=False)
     pmb.build.init(args, suffix)
+    if arch in ["armhf", "armv7l", "aarch64"]:
+        depends.append("binutils-" + arch)
     pmb.chroot.apk.install(args, depends, suffix)
 
     output = (arch + "/" + apkbuild["pkgname"] + "-" + apkbuild["pkgver"] +
