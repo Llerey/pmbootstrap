@@ -19,23 +19,26 @@ def partitions_mount(args, layout, sdcard):
         img_path = "/home/pmos/rootfs/" + args.device + ".img"
         prefix = pmb.install.losetup.device_by_back_file(args, img_path)
 
-    partition_prefix = None
     tries = 20
+
+    # Devices ending with a number have a 'p' before the partition number:
+    # /dev/sda1 has no "p", but /dev/mmcblk0p1 has
+    partition_prefix = prefix
+    if str.isdigit(prefix[-1:]):
+        partition_prefix = f"{prefix}p"
+
+    found = False
     for i in range(tries):
-        for symbol in ["p", ""]:
-            if os.path.exists(prefix + symbol + "1"):
-                partition_prefix = symbol
-        if partition_prefix is not None:
+        if os.path.exists(f"{partition_prefix}1"):
+            found = True
             break
         logging.debug(f"NOTE: ({i + 1}/{tries}) failed to find the install "
                       "partition. Retrying...")
         time.sleep(0.1)
 
-    if partition_prefix is None:
-        raise RuntimeError("Unable to find the partition prefix,"
-                           " expected the first partition of " +
-                           prefix + " to be located at " + prefix +
-                           "1 or " + prefix + "p1!")
+    if not found:
+        raise RuntimeError(f"Unable to find the first partition of {prefix}, "
+                           f"expected it to be at {partition_prefix}1!")
 
     partitions = [layout["boot"], layout["root"]]
 
@@ -43,7 +46,7 @@ def partitions_mount(args, layout, sdcard):
         partitions += [layout["kernel"]]
 
     for i in partitions:
-        source = prefix + partition_prefix + str(i)
+        source = f"{partition_prefix}{i}"
         target = args.work + "/chroot_native/dev/installp" + str(i)
         pmb.helpers.mount.bind_file(args, source, target)
 
